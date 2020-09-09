@@ -5,14 +5,14 @@ from bs4 import BeautifulSoup as BS
 
 class OlX:
     host = 'https://olx.kz'
-    url = 'https://www.olx.kz/nedvizhimost/kvartiry/arenda-dolgosrochnaya/petropavlovsk/'
+    url = 'https://www.olx.kz/nedvizhimost/kvartiry/arenda-dolgosrochnaya'
     lastKey = []
     lastKey_file = ''
     def __init__(self, lastKey_file):
         self.lastKey_file = lastKey_file
         self.keys = []
         if(os.path.exists(lastKey_file)):
-            self.new_post()
+            self.new_post('/petropavlovsk')
         else:
             with open(lastKey_file, 'w') as f:
                 self.lastKey = self.get_lastKey()
@@ -20,8 +20,9 @@ class OlX:
                     f.write(i + '\n')
 
    # проверяем новые посты
-    def new_post(self):
-        r = requests.get(self.url)
+    def new_post(self, paramUrl='/petropavlovsk'):
+        r = requests.get(self.url+paramUrl)
+        print(r)
         html = BS(r.content, 'html.parser')
         new = []
         key_for_update = []
@@ -35,7 +36,9 @@ class OlX:
                 key_for_update.append(key)
         if(new):
             self.update_keys(key_for_update)
-        return new
+            return new
+        else:
+            return False
 
 
     def get_lastKey(self):

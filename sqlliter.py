@@ -36,6 +36,12 @@ class SQLiter:
         with self.connection:
             return self.cursor.execute("UPDATE subscriptions SET status = %s WHERE user_id = %s", (status, u))
 
+    def update_url(self, user_id, url):
+        """Обновляем url_filters подписки пользователя"""
+        u = str(user_id)
+        with self.connection:
+            return self.cursor.execute("UPDATE subscriptions SET url = %s WHERE user_id = %s", (url, u))
+
     def close(self):
         """Закрываем соединение с БД"""
         self.connection.close()
