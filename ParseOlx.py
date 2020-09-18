@@ -1,23 +1,15 @@
 import requests
 import os
 from bs4 import BeautifulSoup as BS
-
+NEW_KEYS = []
 
 class OlX:
     host = 'https://olx.kz'
-    url = 'https://www.olx.kz/nedvizhimost/kvartiry/arenda-dolgosrochnaya'
+    url = 'https://www.olx.kz/nedvizhimost/kvartiry/arenda-dolgosrochnaya/'
     lastKey = []
     lastKey_file = ''
-    def __init__(self, lastKey_file):
-        self.lastKey_file = lastKey_file
-        self.keys = []
-        if(os.path.exists(lastKey_file)):
-            self.new_post('/petropavlovsk')
-        else:
-            with open(lastKey_file, 'w') as f:
-                self.lastKey = self.get_lastKey()
-                for i in self.lastKey:
-                    f.write(i + '\n')
+    def __init__(self):
+        pass
 
    # проверяем новые посты
     def new_post(self, paramUrl='/petropavlovsk'):
@@ -41,18 +33,25 @@ class OlX:
             return False
 
 
-    def get_lastKey(self):
-        keys = []
-        r = requests.get(self.url)
+    def get_lastKey(self, country='kostanay', KEYSI='ID123'):
+        NEW_KEYS.clear()
+        c = 0
+        dataPosts = {}
+        r = requests.get(self.url + country)
         html = BS(r.content, 'html.parser')
         item = html.find_all('a', class_=('marginright5'), href=True)
-        with open(self.lastKey_file, 'a') as f:
-            for i in item:
-                url = i['href']
-                key = url[url.index('ID'):url.index('.html')]
-                keys.append(key)
-                f.write(key + '\n')
-        return keys
+        costs = html.select('div p strong')[:-2]
+
+        while c <= 43:
+            price = costs[c].get_text()[:-4].replace(' ', '')
+            url = item[c]['href']
+            key = url[url.index('ID'):url.index('.html')]
+            if key not in KEYSI:
+                NEW_KEYS.append(key)
+                print(key)
+                dataPosts[c] = [key, int(price), url]
+            c+=1
+        return dataPosts
 
 
     def update_keys(self, newKeys):
