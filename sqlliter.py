@@ -81,7 +81,7 @@ class SQLiter:
                                            (dt[i][0], dt[i][1],dt[i][2], id))
     def get_new_post(self, new_keys='IDiwLDE'):
         with self.connection:
-            self.cursor.execute("SELECT user_id, url FROM subscriptions "
+            self.cursor.execute("SELECT distinct (user_id), url FROM subscriptions "
                                 "LEFT JOIN country using(country_id)"
                                 "LEFT JOIN postkey using(country_id)"
                                 "where key_post IN %s and (costs between costfrom and costto) and status=true", (new_keys,))

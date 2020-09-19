@@ -1,7 +1,7 @@
 import requests
 import os
 from bs4 import BeautifulSoup as BS
-NEW_KEYS = []
+
 
 class OlX:
     host = 'https://olx.kz'
@@ -9,7 +9,7 @@ class OlX:
     lastKey = []
     lastKey_file = ''
     def __init__(self):
-        pass
+        self.NEW_KEYS = []
 
    # проверяем новые посты
     def new_post(self, paramUrl='/petropavlovsk'):
@@ -34,23 +34,22 @@ class OlX:
 
 
     def get_lastKey(self, country='kostanay', KEYSI='ID123'):
-        NEW_KEYS.clear()
         c = 0
         dataPosts = {}
         r = requests.get(self.url + country)
         html = BS(r.content, 'html.parser')
         item = html.find_all('a', class_=('marginright5'), href=True)
         costs = html.select('div p strong')[:-2]
-
         while c <= 43:
             price = costs[c].get_text()[:-4].replace(' ', '')
             url = item[c]['href']
             key = url[url.index('ID'):url.index('.html')]
             if key not in KEYSI:
-                NEW_KEYS.append(key)
+                self.NEW_KEYS.append(key)
                 print(key)
                 dataPosts[c] = [key, int(price), url]
             c+=1
+        print(self.NEW_KEYS, 'all keys')
         return dataPosts
 
 
@@ -63,6 +62,7 @@ class OlX:
 
 
     def post_info(self, posts):
+
         r = requests.get(posts)
         html = BS(r.content, 'html.parser')
         a = html.select('div h1')[0].get_text()

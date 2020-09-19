@@ -5,7 +5,7 @@ from filter import Filter
 from sqlliter import SQLiter
 from aiogram import Bot, Dispatcher, types, executor
 
-from ParseOlx import OlX, NEW_KEYS
+from ParseOlx import OlX
 
 # Задаем уровень логов
 logging.basicConfig(level=logging.INFO)
@@ -43,7 +43,7 @@ key_id = 'null'
 @dp.message_handler(commands=['filter'])
 async def unsubscribe(message: types.Message):
     await message.answer('Добавте фильтр в формате (F:город,цена от, цена до)\n'
-                         'Например F:astana,40000,80000,1,2')
+                         'Например F:astana,40000,80000')
     if (not key_id == 'null'):
         await message.answer('У Вас уже указаны фильры')
 
@@ -52,21 +52,18 @@ async def unsubscribe(message: types.Message):
 async def unsubscribe(message: types.Message):
     data = message.text[2:].split(',')
     paramUrl = FL.url_data(data)
-    db.add_filters(message.from_user.id, paramUrl)
     if paramUrl:
+        db.add_filters(message.from_user.id, paramUrl)
         #db.update_url(message.from_user.id, paramUrl)
         await message.answer('Фильтр успешно добавлен')
     else:
         await message.answer('Введен некорректный фильтр')
 
 
-
-
-
 async def scheduled(wait_for):
     while True:
+        sg.NEW_KEYS.clear()
         await asyncio.sleep(wait_for)
-        print('START PRE')
         # получаем старые ключи
         keys = db.get_keys()
         KEYSI = [i[0] for i in keys]
@@ -77,12 +74,12 @@ async def scheduled(wait_for):
             print(town)
             dataTown = sg.get_lastKey(town[0], KEYSI)
             db.add_post(dataTown, town)
-        if not NEW_KEYS:
+        print('tut', sg.NEW_KEYS)
+        if not sg.NEW_KEYS:
             continue
-        NEW = tuple(NEW_KEYS)
+        NEW = tuple(sg.NEW_KEYS)
 
         # новые посты для подписчиков
-
         paring = db.get_new_post(NEW)
         users_post = {}
         for i, k in paring:
@@ -107,5 +104,5 @@ async def scheduled(wait_for):
 
 # запускаем лонг поллинг
 if __name__ == '__main__':
-    dp.loop.create_task(scheduled(2700))# пока что оставим 10 секунд (в качестве теста)
+    dp.loop.create_task(scheduled(30))# пока что оставим 10 секунд (в качестве теста)
     executor.start_polling(dp, skip_updates=True)
