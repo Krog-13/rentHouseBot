@@ -77,6 +77,7 @@ async def scheduled(wait_for):
         print('tut', sg.NEW_KEYS)
         if not sg.NEW_KEYS:
             continue
+        sg.NEW_KEYS.reverse()
         NEW = tuple(sg.NEW_KEYS)
 
         # новые посты для подписчиков
@@ -104,5 +105,5 @@ async def scheduled(wait_for):
 
 # запускаем лонг поллинг
 if __name__ == '__main__':
-    dp.loop.create_task(scheduled(30))# пока что оставим 10 секунд (в качестве теста)
+    dp.loop.create_task(scheduled(18))# пока что оставим 10 секунд (в качестве теста)
     executor.start_polling(dp, skip_updates=True)
