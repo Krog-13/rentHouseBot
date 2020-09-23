@@ -4,8 +4,9 @@ import asyncio
 from filter import Filter
 from sqlliter import SQLiter
 from aiogram import Bot, Dispatcher, types, executor
-
 from ParseOlx import OlX
+
+FILTERS = []
 
 # Задаем уровень логов
 logging.basicConfig(level=logging.INFO)
@@ -44,6 +45,21 @@ key_id = 'null'
 async def unsubscribe(message: types.Message):
     await message.answer('Добавте фильтр в формате (F:город,цена от, цена до)\n'
                          'Например F:astana,40000,80000')
+
+    markup = types.InlineKeyboardMarkup(row_width=3)
+    item1 = types.InlineKeyboardButton("Petropavlovsk", callback_data='Petropavlovsk')
+    item2 = types.InlineKeyboardButton('Kostanay', callback_data='Kostanay')
+    item3 = types.InlineKeyboardButton('Astana', callback_data='Astana')
+    item4 = types.InlineKeyboardButton('40000', callback_data= '40000')
+    item5 = types.InlineKeyboardButton('50000', callback_data='50000')
+    item6 = types.InlineKeyboardButton('60000', callback_data='60')
+    item7 = types.InlineKeyboardButton('70000', callback_data='70')
+    item8 = types.InlineKeyboardButton('80000', callback_data='80')
+    item9 = types.InlineKeyboardButton('90000', callback_data='90')
+    print('step')
+    markup.add(item1, item2, item3, item4, item5, item6,item7, item8, item9)
+    await message.answer('Выберете парамметр для прогноза', reply_markup=markup)
+
     if (not key_id == 'null'):
         await message.answer('У Вас уже указаны фильры')
 
@@ -103,7 +119,37 @@ async def scheduled(wait_for):
                             + '\nОпубликована ' + nfo['time'] + '\n Ссылка' + nfo['url'], disable_notification=True)
                 photo.close()
 
+@dp.callback_query_handler(lambda call: True)
+async def inline(call: types.callback_query):
+    try:
+        if call.message:
+            print(type(call.data))
+            if call.data in ['Petropavlovsk', 'Kostanay', 'Astana']:
+                FILTERS.append(call.data)
+                print(FILTERS)
+            elif call.data in ['40000', '50000']:
+                FILTERS.append(call.data)
+                print(FILTERS)
+
+                if len(FILTERS) == 3:
+                    if (int(FILTERS[2]) - int(FILTERS[1])) > 0 and FILTERS[0].isalpha():
+                        await bot.send_message(call.message.chat.id, 'filter adding {}{}{}'.format(FILTERS[0],FILTERS[1], FILTERS[2]),
+                                               parse_mode='html')
+
+
+            # remove inline buttons
+           # await bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='Сегодня ',reply_markup=None)
+
+            # show alert
+            #await bot.answer_callback_query(callback_query_id=call.id, show_alert=False,
+            #                          text="Погода в Петропавловске")
+
+    except Exception as e:
+        print(repr(e))
+
+
+
 # запускаем лонг поллинг
 if __name__ == '__main__':
-    dp.loop.create_task(scheduled(18))# пока что оставим 10 секунд (в качестве теста)
+    dp.loop.create_task(scheduled(1000))# пока что оставим 10 секунд (в качестве теста)
     executor.start_polling(dp, skip_updates=True)
