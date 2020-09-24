@@ -7,7 +7,7 @@ from aiogram import Bot, Dispatcher, types, executor
 from ParseOlx import OlX
 
 FILTERS = []
-
+testing = []
 # Задаем уровень логов
 logging.basicConfig(level=logging.INFO)
 
