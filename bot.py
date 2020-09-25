@@ -1,3 +1,5 @@
+from aiogram.dispatcher import filters
+
 import config
 import logging
 import asyncio
@@ -7,7 +9,7 @@ from aiogram import Bot, Dispatcher, types, executor
 from ParseOlx import OlX
 
 FILTERS = []
-testing = []
+
 # Задаем уровень логов
 logging.basicConfig(level=logging.INFO)
 
@@ -38,34 +40,66 @@ async def unsubscribe(message: types.Message):
         await message.answer('Вы и так подписаны!')
     else:
         db.update_subscription(message.from_user.id, False)
-        await message.answer('Вы успешно отписаын от рассылки')
+        await message.answer('Вы успешно отписаны от рассылки')
 
 key_id = 'null'
 @dp.message_handler(commands=['filter'])
 async def unsubscribe(message: types.Message):
-    await message.answer('Добавте фильтр в формате (F:город,цена от, цена до)\n'
-                         'Например F:astana,40000,80000')
 
     markup = types.InlineKeyboardMarkup(row_width=3)
     item1 = types.InlineKeyboardButton("Petropavlovsk", callback_data='Petropavlovsk')
     item2 = types.InlineKeyboardButton('Kostanay', callback_data='Kostanay')
     item3 = types.InlineKeyboardButton('Astana', callback_data='Astana')
-    item4 = types.InlineKeyboardButton('40000', callback_data= '40000')
-    item5 = types.InlineKeyboardButton('50000', callback_data='50000')
-    item6 = types.InlineKeyboardButton('60000', callback_data='60')
-    item7 = types.InlineKeyboardButton('70000', callback_data='70')
-    item8 = types.InlineKeyboardButton('80000', callback_data='80')
-    item9 = types.InlineKeyboardButton('90000', callback_data='90')
-    print('step')
+    item4 = types.InlineKeyboardButton('Pavlodar', callback_data='Pavlodar')
+    item5 = types.InlineKeyboardButton('Almata', callback_data='Almata')
+    item6 = types.InlineKeyboardButton('Uralsk', callback_data='Uralsk')
+    item7 = types.InlineKeyboardButton('Kokchetav', callback_data='Kokchetav')
+    item8 = types.InlineKeyboardButton('Aktobe', callback_data='Aktobe')
+    item9 = types.InlineKeyboardButton('Karaganda', callback_data='Karaganda')
     markup.add(item1, item2, item3, item4, item5, item6,item7, item8, item9)
-    await message.answer('Выберете парамметр для прогноза', reply_markup=markup)
-
-    if (not key_id == 'null'):
-        await message.answer('У Вас уже указаны фильры')
-
-
-@dp.message_handler(regexp='(^F:)')
+    await message.answer('Выберете город', reply_markup=markup)
+'''
+    markupCost = types.InlineKeyboardMarkup(row_width=5)
+    item11 = types.InlineKeyboardButton('30000', callback_data='30000')
+    item22 = types.InlineKeyboardButton('40000', callback_data='40000')
+    item33 = types.InlineKeyboardButton('50000', callback_data='50000')
+    item44 = types.InlineKeyboardButton('60000', callback_data='60000')
+    item55 = types.InlineKeyboardButton('70000', callback_data='70000')
+    item66 = types.InlineKeyboardButton('80000', callback_data='80000')
+    item100 = types.InlineKeyboardButton('55000', callback_data='55000')
+    item77 = types.InlineKeyboardButton('90000', callback_data='90000')
+    item88 = types.InlineKeyboardButton('100000', callback_data='10000')
+    item99 = types.InlineKeyboardButton('120000', callback_data='120000')
+    markupCost.add(item11, item22, item33, item44, item55, item66, item77, item88, item99, item100)
+    await message.answer('Выберете диапазон цен', reply_markup=markupCost)
+#добавить диапазон цен и проыерить на isdigit
+'''
+@dp.message_handler(regexp='(^[0-9]*[0-9]$)')
+#@dp.message_handler(regexp='(^F:)')
 async def unsubscribe(message: types.Message):
+    FILTERS.append(message.text)
+    print(FILTERS)
+    if FILTERS:
+        if not FILTERS[1].isdigit():
+            FILTERS.clear()
+            await message.answer('введены некорректные данные\n'
+                                 'попробуйте еще раз')
+        elif len(FILTERS) == 2:
+            await message.answer('введите цену до:')
+        elif len(FILTERS) == 3:
+            if (int(FILTERS[2]) - int(FILTERS[1])) > 0 and FILTERS[0].isalpha():
+                FILTERS.clear()
+                await message.answer('Фильтр успешно добавлен')
+            else:
+                await message.answer('введены некорректные данные\n'
+                                     'попробуйте еще раз')
+                FILTERS.clear()
+
+
+
+
+
+    '''
     data = message.text[2:].split(',')
     paramUrl = FL.url_data(data)
     if paramUrl:
@@ -74,7 +108,7 @@ async def unsubscribe(message: types.Message):
         await message.answer('Фильтр успешно добавлен')
     else:
         await message.answer('Введен некорректный фильтр')
-
+'''
 
 async def scheduled(wait_for):
     while True:
@@ -123,33 +157,52 @@ async def scheduled(wait_for):
 async def inline(call: types.callback_query):
     try:
         if call.message:
-            print(type(call.data))
-            if call.data in ['Petropavlovsk', 'Kostanay', 'Astana']:
+            if call.data in ['Petropavlovsk', 'Kostanay', 'Astana', 'Pavlodar', 'Almata', 'Uralsk', 'Karaganda']:
                 FILTERS.append(call.data)
-                print(FILTERS)
-            elif call.data in ['40000', '50000']:
+                await bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                            text='Вы выбрали город {}\n'
+                                                 'укажите диапазон (цена от  цена до) \n'
+                                                 'введите цену от:'.format(FILTERS[0])
+                                            , reply_markup=None)
+                '''
+            elif call.data in ['30000','40000', '50000','60000', '70000', '80000', '90000','100000','120000', '55000']:
                 FILTERS.append(call.data)
-                print(FILTERS)
 
                 if len(FILTERS) == 3:
                     if (int(FILTERS[2]) - int(FILTERS[1])) > 0 and FILTERS[0].isalpha():
-                        await bot.send_message(call.message.chat.id, 'filter adding {}{}{}'.format(FILTERS[0],FILTERS[1], FILTERS[2]),
-                                               parse_mode='html')
+                        await bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                                    text='Ваш фильтр: город:{}\n диапазон цен от {} до {}\n'
+                                                         'успешно добавлен!'.format(FILTERS[0],FILTERS[1], FILTERS[2]),
+                                               reply_markup=None)
+                        FILTERS.clear()
+                    else:
+                        FILTERS.clear()
+                        await bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                                    text='Извените что-то пошло не так попробуйте снова',
+                                                    reply_markup=None)
+                elif len(FILTERS) == 2:
+                    if not (FILTERS[1].isdigit()):
+                        FILTERS.clear()
+                        await bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
+                                                    text='Извените что-то пошло не так попробуйте снова',
+                                                    reply_markup=None)
 
+'''
 
             # remove inline buttons
-           # await bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id, text='Сегодня ',reply_markup=None)
+
 
             # show alert
-            #await bot.answer_callback_query(callback_query_id=call.id, show_alert=False,
-            #                          text="Погода в Петропавловске")
+            #await bot.answer_callback_query(callback_query_id=call.id, show_alert=False,text="Погода в Петропавловске")
+
 
     except Exception as e:
         print(repr(e))
 
 
 
+
 # запускаем лонг поллинг
 if __name__ == '__main__':
-    dp.loop.create_task(scheduled(1000))# пока что оставим 10 секунд (в качестве теста)
+    dp.loop.create_task(scheduled(100000))# пока что оставим 10 секунд (в качестве теста)
     executor.start_polling(dp, skip_updates=True)
