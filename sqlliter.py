@@ -48,11 +48,9 @@ class SQLiter:
         f = [int(fPost[i]) for i in fPost if i > 0]
         c = fPost[0]
         u = str(user_id)
-        print(c)
         with self.connection:
             self.cursor.execute('SELECT country_id FROM country WHERE name_country = %s', (c,))
             id = self.cursor.fetchone()
-            print(id)
             self.cursor.execute("UPDATE subscriptions SET country_id = %s, costFrom = %s, costTo = %s WHERE user_id = %s", (id,f[0],f[1], u))
 
           #  return self.cursor.execute("INSERT INTO filters (costfrom, costto, country_id) VALUES(%s,%s,%s)",

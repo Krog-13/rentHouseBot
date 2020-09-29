@@ -9,7 +9,8 @@ from aiogram import Bot, Dispatcher, types, executor
 from ParseOlx import OlX
 from aiogram.dispatcher.filters import BoundFilter
 FILTERS = []
-
+county_for_db = {'Петропавл':'petropavlovsk','Кустанай':'kostanay', 'Павлодар':'pavlodar'}
+county_for_u = {'petropavlovsk':'Петропавл','kostanay':'Кустанай', 'pavlodar':'Павлодар'}
 # Задаем уровень логов
 logging.basicConfig(level=logging.INFO)
 
@@ -18,7 +19,7 @@ bot = Bot(token=config.API_TOKEN)
 dp = Dispatcher(bot)
 
 # inicialization DB
-db = SQLiter('olxbot')
+db = SQLiter('test')
 
 # inicialization parser
 sg = OlX()
@@ -48,8 +49,8 @@ async def unsubscribe(message: types.Message):
 
     markup = types.InlineKeyboardMarkup(row_width=3)
     item1 = types.InlineKeyboardButton("Петропавл", callback_data='Петропавл')
-    item2 = types.InlineKeyboardButton('Костанай', callback_data='Костанай')
-    item3 = types.InlineKeyboardButton('Астана', callback_data='Астана')
+    item2 = types.InlineKeyboardButton('Кустанай', callback_data='Кустанай')
+    item3 = types.InlineKeyboardButton('Павлодар', callback_data='Павлодар')
     #item4 = types.InlineKeyboardButton('Павлодар', callback_data='Pavlodar')
     #item5 = types.InlineKeyboardButton('Алмата', callback_data='Almata')
     #item6 = types.InlineKeyboardButton('Уральск', callback_data='Uralsk')
@@ -62,14 +63,15 @@ async def unsubscribe(message: types.Message):
 #@dp.message_handler(lambda message: message.text and 'hello' in message.text.lower())
 @dp.message_handler(regexp='(^[0-9]*[0-9]$)')
 async def my_filter(message: types.Message):
+    # добавление фильтров в БД
     def add_filter_db(param):
         paramUrl = FL.url_data(param)
         if paramUrl:
-            #db.add_filters(message.from_user.id, paramUrl)
-            print(paramUrl)
+            db.add_filters(message.from_user.id, paramUrl)
             return True
         else:
             return False
+
     if FILTERS:
         FILTERS.append(message.text)
         if not FILTERS[1].isdigit():
@@ -83,7 +85,7 @@ async def my_filter(message: types.Message):
                 if add_filter_db(FILTERS):
                     await message.answer('<strong>Фильтр успешно добавлен</strong>\n'
                                      'Город: <b>{}</b>\nЦена от: <b>{}</b> тг\nЦена до: <b>{}</b> тг'
-                                     ''.format(FILTERS[0], FILTERS[1], FILTERS[2]), parse_mode='html')
+                                     ''.format(county_for_u[FILTERS[0]], FILTERS[1], FILTERS[2]), parse_mode='html')
                     FILTERS.clear()# Every onese is a while
                 else:
                     await message.answer('Error 500\n'
@@ -125,10 +127,8 @@ async def scheduled(wait_for):
         # получаем города
         countries = db.get_country()
         for town in countries:
-            print(town)
             dataTown = sg.get_lastKey(town[0], KEYSI)
             db.add_post(dataTown, town)
-        print('tut', sg.NEW_KEYS)
         if not sg.NEW_KEYS:
             continue
         sg.NEW_KEYS.reverse()
@@ -144,7 +144,6 @@ async def scheduled(wait_for):
 
 
  #       await asyncio.sleep(wait_for)
-        print('START NOW')
         for site in users_post:
             nfo = sg.post_info(site)
             for user in users_post[site]:
@@ -161,8 +160,8 @@ async def scheduled(wait_for):
 async def inline(call: types.callback_query):
     try:
         if call.message:
-            if call.data in ['Петропавл', 'Костанай', 'Астана', 'Pavlodar', 'Almata', 'Uralsk', 'Karaganda']:
-                FILTERS.append(call.data)
+            if call.data in ['Петропавл', 'Кустанай', 'Павлодар', 'Астана', 'Almata', 'Uralsk', 'Karaganda']:
+                FILTERS.append(county_for_db[call.data])
                 # remove inline buttons
                 await bot.edit_message_text(chat_id=call.message.chat.id, message_id=call.message.message_id,
                                             text='Вы выбрали город {}\n'
@@ -180,6 +179,5 @@ async def inline(call: types.callback_query):
 
 # запускаем лонг поллинг
 if __name__ == '__main__':
-    pass
-    #dp.loop.create_task(scheduled(1000))
+    dp.loop.create_task(scheduled(1000))
     executor.start_polling(dp, skip_updates=True)
