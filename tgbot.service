@@ -1,0 +1,17 @@
+[Unit]
+Description=Telegram Bot
+After=network.target
+
+[Service]
+User=krog
+Group=krog
+
+
+WorkingDirectory=/home/krog/rentHouseBot
+Environment="PYTHONPATH=/home/krog/rentHouseBot"
+ExecStart=/home/krog/rentHoseBot/.venv/bin/python /home/krog/rentHouseBot/bot.py
+
+
+[Install]
+WantedBy=multi-user.target
+

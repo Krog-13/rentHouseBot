@@ -179,5 +179,5 @@ async def inline(call: types.callback_query):
 
 # запускаем лонг поллинг
 if __name__ == '__main__':
-    dp.loop.create_task(scheduled(1000))
+    dp.loop.create_task(scheduled(1800))
     executor.start_polling(dp, skip_updates=True)
