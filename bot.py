@@ -19,7 +19,7 @@ bot = Bot(token=config.API_TOKEN)
 dp = Dispatcher(bot)
 
 # inicialization DB
-db = SQLiter('test')
+db = SQLiter('olxdb')
 
 # inicialization parser
 sg = OlX()
