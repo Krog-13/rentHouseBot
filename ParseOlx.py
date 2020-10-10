@@ -40,18 +40,14 @@ class OlX:
         html = BS(r.content, 'html.parser')
         item = html.find_all('a', class_=('marginright5'), href=True)
         costs = html.select('div p strong')[:-2]
-        while c <= 43:
-
-            price = costs[c].get_text()
-            if len(price) < 7:
-                continue
-            price_fix = price[:-4].replace(' ', '')
+        while c <= 40:
+            price = costs[c].get_text()[:-4].replace(' ', '')
             url = item[c]['href']
             key = url[url.index('ID'):url.index('.html')]
             if key not in KEYSI:
                 self.NEW_KEYS.append(key)
                 print(key)
-                dataPosts[c] = [key, int(price_fix), url]
+                dataPosts[c] = [key, int(price), url]
             c+=1
         print(self.NEW_KEYS, 'all keys')
         return dataPosts
